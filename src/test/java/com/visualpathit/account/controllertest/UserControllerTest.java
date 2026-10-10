@@ -1,4 +1,4 @@
-package com.visualpathit.account.controllerTest;
+package com.visualpathit.account.controllertest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
