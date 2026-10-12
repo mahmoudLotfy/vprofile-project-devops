@@ -17,3 +17,4 @@ jenkins_home_backup.tar.gz
 .idea/
 .vscode/
 .DS_Store
+nexus_data/
