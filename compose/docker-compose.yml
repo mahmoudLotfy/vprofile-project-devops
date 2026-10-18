@@ -1,0 +1,84 @@
+services:
+  db01:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-accounts}
+      MYSQL_USER: ${MYSQL_USER:?Set MYSQL_USER in .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - vprofile-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$${MYSQL_ROOT_PASSWORD}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  mc01:
+    image: memcached:1.6
+    networks:
+      - vprofile-net
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/11211"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  rmq01:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?Set RABBITMQ_DEFAULT_USER in .env}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?Set RABBITMQ_DEFAULT_PASS in .env}
+    networks:
+      - vprofile-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    networks:
+      - vprofile-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200 >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+  app:
+    image: vprofile-app:15
+    ports:
+      - "8084:8080"
+    environment:
+      ELASTICSEARCH_HOST: es01
+      ELASTICSEARCH_PORT: "9200"
+    depends_on:
+      db01:
+        condition: service_healthy
+      mc01:
+        condition: service_healthy
+      rmq01:
+        condition: service_healthy
+      es01:
+        condition: service_healthy
+    networks:
+      - vprofile-net
+
+volumes:
+  mysql_data:
+    external: true
+    name: e249bf7284b0f9078fd0801b3eee1afd5e4c23df729a6e197fbbbc9adc2be478
+
+networks:
+  vprofile-net:
+    external: true
+    name: vprofile-net

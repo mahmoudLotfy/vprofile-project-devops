@@ -18,3 +18,11 @@ jenkins_home_backup.tar.gz
 .vscode/
 .DS_Store
 nexus_data/
+
+# Database backups
+backups/
+
+# Jenkins home archives
+jenkins_home*.tar.gz
+# Local Compose reference copy
+compose/docker-compose.yml.original
