@@ -10,7 +10,6 @@ pipeline {
             steps {
                 sh '''
                     echo "Workspace: $WORKSPACE"
-                    echo "Git branch: $BRANCH_NAME"
                     test -f compose/docker-compose.yml
                     echo "Docker Compose file found"
                 '''
@@ -32,6 +31,27 @@ pipeline {
                     docker image inspect vprofile-app:15 \
                       --format='Image ID: {{.Id}}'
                 '''
+            }
+        }
+
+        stage('VALIDATE COMPOSE CONFIG') {
+            steps {
+                withCredentials([
+                    file(
+                        credentialsId: 'vprofile-compose-env',
+                        variable: 'ENV_FILE'
+                    )
+                ]) {
+                    sh '''
+                        set -eu
+                        test -s "$ENV_FILE"
+                        docker compose \
+                          --env-file "$ENV_FILE" \
+                          -f compose/docker-compose.yml \
+                          config --quiet
+                        echo "Compose configuration validated"
+                    '''
+                }
             }
         }
     }
