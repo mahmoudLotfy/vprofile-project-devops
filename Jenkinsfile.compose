@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+    }
+
+    stages {
+        stage('CHECK WORKSPACE') {
+            steps {
+                sh '''
+                    echo "Workspace: $WORKSPACE"
+                    echo "Git branch: $BRANCH_NAME"
+                    test -f compose/docker-compose.yml
+                    echo "Docker Compose file found"
+                '''
+            }
+        }
+
+        stage('CHECK DOCKER') {
+            steps {
+                sh '''
+                    docker version
+                    docker compose version
+                '''
+            }
+        }
+
+        stage('CHECK APP IMAGE') {
+            steps {
+                sh '''
+                    docker image inspect vprofile-app:15 \
+                      --format='Image ID: {{.Id}}'
+                '''
+            }
+        }
+    }
+}
