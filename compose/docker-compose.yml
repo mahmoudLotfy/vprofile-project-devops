@@ -55,7 +55,7 @@ services:
       retries: 10
       start_period: 60s
   app:
-    image: vprofile-app:15
+    image: vprofile-app:${APP_IMAGE_TAG:-15}
     ports:
       - "8084:8080"
     environment:
