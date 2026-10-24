@@ -1,6 +1,19 @@
 pipeline {
     agent any
 
+    parameters {
+        string(
+            name: 'APP_IMAGE_TAG',
+            defaultValue: '15',
+            description: 'Existing local vprofile-app image tag'
+        )
+        booleanParam(
+            name: 'DEPLOY',
+            defaultValue: false,
+            description: 'Deploy the Compose stack when explicitly enabled'
+        )
+    }
+
     options {
         timestamps()
     }
@@ -28,7 +41,8 @@ pipeline {
         stage('CHECK APP IMAGE') {
             steps {
                 sh '''
-                    docker image inspect vprofile-app:15 \
+                    set -eu
+                    docker image inspect "vprofile-app:${APP_IMAGE_TAG}" \
                       --format='Image ID: {{.Id}}'
                 '''
             }
@@ -50,6 +64,28 @@ pipeline {
                           -f compose/docker-compose.yml \
                           config --quiet
                         echo "Compose configuration validated"
+                    '''
+                }
+            }
+        }
+
+        stage('DEPLOY COMPOSE STACK') {
+            when {
+                expression { params.DEPLOY == true }
+            }
+            steps {
+                withCredentials([
+                    file(
+                        credentialsId: 'vprofile-compose-env',
+                        variable: 'ENV_FILE'
+                    )
+                ]) {
+                    sh '''
+                        set -eu
+                        docker compose \
+                          --env-file "$ENV_FILE" \
+                          -f compose/docker-compose.yml \
+                          up -d --wait
                     '''
                 }
             }
