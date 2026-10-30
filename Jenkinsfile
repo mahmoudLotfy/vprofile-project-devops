@@ -118,10 +118,16 @@ pipeline {
                     }
                 }
             }
+	}
+        stage('TRIGGER CD') {
+            steps {
+                build job: 'vprofile-compose-cd',
+                    parameters: [
+                        string(name: 'APP_IMAGE_TAG', value: "${BUILD_NUMBER}"),
+                        booleanParam(name: 'DEPLOY', value: true)
+                    ],
+                    wait: true
+            }
         }
-
-
     }
-
-
 }
