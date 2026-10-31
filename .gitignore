@@ -26,3 +26,10 @@ backups/
 jenkins_home*.tar.gz
 # Local Compose reference copy
 compose/docker-compose.yml.original
+
+# Original provisioning files retained locally
+/ansible/
+/vagrant/
+
+# Local Jenkins Dockerfile draft
+/Dockerfile.jenkins
